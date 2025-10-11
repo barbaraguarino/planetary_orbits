@@ -1,7 +1,7 @@
 function simulate_planetary_orbits(pos_vet, vel_vet, m_vet, n_steps, step_size, steps_between_save, G, filename)
   n = length(m_vet);
-  f_vet = zeros(2, n);
-  a_vet = zeros(2, n);
+  f_vet = zeros(3, n);
+  a_vet = zeros(3, n);
 
   fid = fopen(filename, 'wb');
 

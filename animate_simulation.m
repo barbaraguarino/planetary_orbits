@@ -7,49 +7,64 @@ function animate_simulation(filename, m_vet)
   data = fread(fid, 'double');
   fclose(fid);
 
-  % reorganiza dados: 2 x n x n_frames
-  n_values_per_frame = 2 * n;
+  % reorganiza dados: 3 x n x n_frames
+  n_values_per_frame = 3 * n;
   n_frames = floor(length(data) / n_values_per_frame);
-  pos_data = reshape(data(1:(n_frames*n_values_per_frame)), [2, n, n_frames]);
+  pos_data = reshape(data(1:(n_frames * n_values_per_frame)), [3, n, n_frames]);
 
-  % limites fixos do gráfico
+  % limites do gráfico
   max_coord = max(abs(pos_data(:))) * 1.1;
   if max_coord == 0, max_coord = 1; end
 
   figure;
+  hold on;
+  grid on;
   axis equal;
   xlim([-max_coord, max_coord]);
   ylim([-max_coord, max_coord]);
-  hold on;
+  zlim([-max_coord, max_coord]);
+  xlabel('X');
+  ylabel('Y');
+  zlabel('Z');
+  title('Simulação Planetária 3D');
 
-  % cria círculos para cada corpo
-  circles = cell(1, n);  % vetor de handles
+  % === Escala de tamanho baseada na massa ===
+  min_size = 20;
+  max_size = 500;
+  min_mass = min(m_vet);
+  max_mass = max(m_vet);
+
+  % evita divisão por zero se todas as massas forem iguais
+  if max_mass == min_mass
+      sizes = ones(1, n) * ((min_size + max_size) / 2);
+  else
+      % mapeia linearmente a massa para o intervalo [min_size, max_size]
+      sizes = min_size + (m_vet - min_mass) / (max_mass - min_mass) * (max_size - min_size);
+  end
+
+  % cria pontos para cada corpo
+  points = cell(1, n);
   for i = 1:n
-      r = sqrt(m_vet(i))/2; % raio proporcional à massa
-      x = pos_data(1,i,1) - r;
-      y = pos_data(2,i,1) - r;
-
       if i == 1
-          color = 'y'; % corpo central
+          color = 'y'; % corpo central (estrela)
       else
           color = 'b'; % planetas
       end
-
-      circles{i} = rectangle('Position', [x, y, 2*r, 2*r], ...
-                             'Curvature', [1 1], ...
-                             'FaceColor', color);
+      points{i} = scatter3(pos_data(1,i,1), pos_data(2,i,1), pos_data(3,i,1), ...
+                           sizes(i), color, 'filled');
   end
 
-  % loop de animação: atualiza apenas posições dos objetos
+  % configura o ângulo da câmera
+  view(45, 25);
+
+  % loop de animação
   for k = 1:n_frames
       for i = 1:n
-          r = sqrt(m_vet(i))/2;
-          x = pos_data(1,i,k) - r;
-          y = pos_data(2,i,k) - r;
-          set(circles{i}, 'Position', [x, y, 2*r, 2*r]);
+          set(points{i}, 'XData', pos_data(1,i,k), ...
+                         'YData', pos_data(2,i,k), ...
+                         'ZData', pos_data(3,i,k));
       end
       drawnow;
-      pause(0.02);  % controla velocidade
+      pause(0.02);
   end
 end
-

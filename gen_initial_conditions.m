@@ -4,8 +4,8 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
   end
 
   % inicializa arrays
-  pos = zeros(2, n);
-  vel = zeros(2, n);
+  pos = zeros(3, n);
+  vel = zeros(3, n);
   mass = zeros(1, n);
 
   % massas
@@ -13,14 +13,26 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
   mass(1) = m;
 
   % posições
-  radii = rand(1, n-1) * r + r*0.05;
+  radii = rand(1, n-1) * r + r * 0.5;
   angles = rand(1, n-1) * 2 * pi;
-  pos(1, 2:n) = radii .* cos(angles);
-  pos(2, 2:n) = radii .* sin(angles);
+  z_rot = (rand(1, n-1) - 0.5) * (2 * deg2rad(15)); %gera inclinações de até 15o na coordenada z
 
-  % velocidades
-  x = pos(1, 2:n);
-  y = pos(2, 2:n);
-  vel(1, 2:n) = -y .* sqrt(G*m ./ radii) ./ radii;
-  vel(2, 2:n) =  x .* sqrt(G*m ./ radii) ./ radii;
+  pos(1, 2:n) = radii .* cos(angles) .* cos(z_rot);
+  pos(2, 2:n) = radii .* sin(angles) .* cos(z_rot);
+  pos(3, 2:n) = radii .* sin(z_rot);
+
+  for i = 2:n
+      r_vec = pos(:,i);
+      r_mag = norm(r_vec);
+      vel_mag = sqrt(G*m / r_mag);
+
+      % vetor perpendicular usando produto vetorial
+      ref = [0;0;1];                     % vetor de referência (eixo Z)
+      if abs(dot(r_vec, ref)/r_mag) > 0.99
+          ref = [1;0;0];                 % evita vetor quase paralelo
+      end
+      v_dir = cross(ref, r_vec);         % perpendicular a r_vec
+      v_dir = v_dir / norm(v_dir);       % normaliza
+      vel(:,i) = vel_mag * v_dir;        % vetor velocidade final
+  end
 end
