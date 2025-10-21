@@ -52,6 +52,8 @@ function animate_simulation(filename, m_vet)
       end
       points{i} = scatter3(pos_data(1,i,1), pos_data(2,i,1), pos_data(3,i,1), ...
                            sizes(i), color, 'filled');
+
+
   end
 
   % configura o ângulo da câmera
@@ -63,6 +65,7 @@ function animate_simulation(filename, m_vet)
           set(points{i}, 'XData', pos_data(1,i,k), ...
                          'YData', pos_data(2,i,k), ...
                          'ZData', pos_data(3,i,k));
+
       end
       drawnow;
       pause(0.02);

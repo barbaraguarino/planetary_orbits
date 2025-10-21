@@ -17,8 +17,9 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
   angles = rand(1, n-1) * 2 * pi;
   z_rot = (rand(1, n-1) - 0.5) * (2 * deg2rad(15)); %gera inclinações de até 15o na coordenada z
 
-  pos(1, 2:n) = radii .* cos(angles) .* cos(z_rot);
-  pos(2, 2:n) = radii .* sin(angles) .* cos(z_rot);
+
+  pos(1, 2:n) = radii .* cos(angles);
+  pos(2, 2:n) = radii .* sin(angles);
   pos(3, 2:n) = radii .* sin(z_rot);
 
   for i = 2:n
@@ -28,9 +29,7 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
 
       % vetor perpendicular usando produto vetorial
       ref = [0;0;1];                     % vetor de referência (eixo Z)
-      if abs(dot(r_vec, ref)/r_mag) > 0.99
-          ref = [1;0;0];                 % evita vetor quase paralelo
-      end
+
       v_dir = cross(ref, r_vec);         % perpendicular a r_vec
       v_dir = v_dir / norm(v_dir);       % normaliza
       vel(:,i) = vel_mag * v_dir;        % vetor velocidade final
