@@ -9,7 +9,7 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
   mass = zeros(1, n);
 
   % massas
-  mass = rand(1, n) * (m/40) + (m*0.0005);
+  mass = rand(1, n) * (m/3) + (m*0.0005);
   mass(1) = m;
 
   % posições
