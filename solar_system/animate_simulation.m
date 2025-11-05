@@ -16,8 +16,8 @@ function animate_simulation(filename, m_vet, c_vet)
   pos_data = reshape(data(1:(n_frames * n_values_per_frame)), [3, n, n_frames]);
 
   % Configuração inicial da figura
-  max_coord = max(abs(pos_data(:))) * 1.1;
-
+  % max_coord = max(abs(pos_data(:))) * 1.1; % Antigo: dependia de Plutão
+  max_coord = 30; % <--- NOVO: Aproxima a câmera para 30 AU para melhor visão
   if max_coord == 0, max_coord = 1; end
 
   h_fig = figure;
@@ -33,7 +33,7 @@ function animate_simulation(filename, m_vet, c_vet)
   title('Simulação Planetária 3D');
 
   % Escala de tamanho baseada na massa
-  min_size = 20; max_size = 100;
+  min_size = 40; max_size = 200; % <--- NOVO: Tamanho dos planetas dobrado
   min_mass = min(m_vet); max_mass = max(m_vet);
 
   if max_mass == min_mass
@@ -52,7 +52,7 @@ function animate_simulation(filename, m_vet, c_vet)
   r_hab_outer = 1.8;
 
   r_cold_inner = 1.8;
-  r_cold_outer = 40.0;
+  r_cold_outer = 40.0; % Mantido para o anel ainda ir até o final
 
   % Criação da malha para os anéis
   n_theta_steps = 50;
@@ -76,42 +76,39 @@ function animate_simulation(filename, m_vet, c_vet)
   Y_cold_mesh = R_cold .* sin(T_cold);
   Z_cold_mesh = zeros(size(X_cold_mesh));
 
-
-
   % Desenha os anéis na Posição Inicial do Sol
-
   sun_pos_initial = pos_data(:, 1, 1);
 
   h_zone_hot = surf(X_hot_mesh + sun_pos_initial(1), Y_hot_mesh + sun_pos_initial(2), Z_hot_mesh + sun_pos_initial(3), ...
-      'FaceColor', 'r', 'FaceAlpha', 0.25, 'EdgeColor', 'none');
+      'FaceColor', 'r', 'FaceAlpha', 0.4, 'EdgeColor', 'none'); % <--- NOVO FaceAlpha
 
   h_zone_hab = surf(X_hab_mesh + sun_pos_initial(1), Y_hab_mesh + sun_pos_initial(2), Z_hab_mesh + sun_pos_initial(3), ...
-      'FaceColor', 'g', 'FaceAlpha', 0.25, 'EdgeColor', 'none');
+      'FaceColor', 'g', 'FaceAlpha', 0.4, 'EdgeColor', 'none'); % <--- NOVO FaceAlpha
 
   h_zone_cold = surf(X_cold_mesh + sun_pos_initial(1), Y_cold_mesh + sun_pos_initial(2), Z_cold_mesh + sun_pos_initial(3), ...
-      'FaceColor', 'b', 'FaceAlpha', 0.15, 'EdgeColor', 'none');
+      'FaceColor', 'c', 'FaceAlpha', 0.3, 'EdgeColor', 'none'); % <--- NOVO FaceAlpha e Cor 'c'
 
   % --- Criação dos Planetas e Rastros ---
 
   points = cell(1, n);
   labels = cell(1, n);
   trails = cell(1, n);
-  trail_length = 50;
+  trail_length = 200; % <--- NOVO: Rastros mais longos
 
   for i = 1:n
       color = c_vet(i);
       points{i} = scatter3(pos_data(1,i,1), pos_data(2,i,1), pos_data(3,i,1), ...
                            sizes(i), color, 'filled');
 
-      offset = 0.5 * sizes(i) / max_coord;
-
+      % O offset também pode precisar de ajuste com o novo tamanho dos planetas
+      offset = 1.0 * sizes(i) / max_coord; % <--- NOVO: Offset ajustado
       labels{i} = text(pos_data(1,i,1)+offset, pos_data(2,i,1)+offset, pos_data(3,i,1)+offset, ...
                  planet_names{i}, 'FontSize', 10, 'Color', 'k', 'HorizontalAlignment', 'center');
 
       trails{i} = plot3(NaN, NaN, NaN, '-', 'Color', c_vet(i));
   end
 
-  view(45, 25); % Posição de vizualização
+  view(45, 25); % Posição de visualização
 
   % --- Loop da animação ---
 
@@ -120,7 +117,6 @@ function animate_simulation(filename, m_vet, c_vet)
           if ~ishandle(h_fig), break; end
 
           % Atualização das posições das Zonas de acordo com o sol
-
           sun_pos_current = pos_data(:, 1, k);
 
           set(h_zone_hot, 'XData', X_hot_mesh + sun_pos_current(1), ...
@@ -159,5 +155,4 @@ function animate_simulation(filename, m_vet, c_vet)
   end
 
   disp('Animação interrompida.');
-
 end
