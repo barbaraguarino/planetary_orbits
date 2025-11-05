@@ -10,22 +10,16 @@ function simulate_planetary_orbits_vectorized(pos_vet, vel_vet, m_vet, n_steps, 
   flog = fopen([filename, '.log'], 'w');
 
   % Implementação do Leapfrog
-
-  % "Kick" Inicial (Meio passo de velocidade)
-  % Calcula a aceleração inicial com base na posição
   a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n);
-
-  % Atualiza a velocidade para (t = step_size / 2)
   vel_vet = vel_vet + a_vet * (step_size / 2.0);
 
+  fprintf('Simulação em progresso:  0.00%% concluído.\r');
 
   for _t = 1:n_steps
-    % "Drift" (Passo completo de Posição)
     % Atualiza a posição para (t + step_size)
     % usando a velocidade de meio-passo
     pos_vet = pos_vet + vel_vet * step_size;
 
-    % "Kick" (Passo completo de Velocidade)
     % Calcula a aceleração na nova Posição (t + step_size)
     a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n);
 
@@ -35,9 +29,8 @@ function simulate_planetary_orbits_vectorized(pos_vet, vel_vet, m_vet, n_steps, 
     % Salvar os dados
     if mod(_t, steps_between_save) == 0
       fwrite(fid, pos_vet, 'double');
-      clc;
       percent_done = (_t / n_steps) * 100;
-      fprintf('Simulação em progresso: %.2f%% concluído.\n', percent_done);
+      fprintf('Simulação em progresso: %.2f%% concluído.\r', percent_done);
     end
   end
 
@@ -75,10 +68,8 @@ function a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n)
     dy = pos_vet(2,:) - pos_vet(2,:)';
     dz = pos_vet(3,:) - pos_vet(3,:)';
 
-    % Calcular matriz de distância ao quadrado
     d2 = dx.^2 + dy.^2 + dz.^2;
 
-    % Calcular 1/d^3
     inv_d3 = d2 .^ (-1.5);
 
     % Lida com a singularidade
@@ -94,6 +85,6 @@ function a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n)
 
     f_vet = [fx_total, fy_total, fz_total]';
 
-    % Aceleração (a = F/m)
+    % Aceleração
     a_vet = f_vet ./ m_vet;
 end
