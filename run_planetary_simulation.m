@@ -12,9 +12,9 @@ function [] = run_planetary_simulation()
   n_steps = 5000000;
   steps_between_save = 1000;
 
-  % disp('Iniciando simulação...');
+  disp('Iniciando simulação...');
 
-  % simulate_planetary_orbits_vectorized(pos, vel, mass, n_steps, step_size, steps_between_save, G, filename);
+  simulate_planetary_orbits(pos, vel, mass, n_steps, step_size, steps_between_save, G, filename);
 
   % Animar os resultados
   disp('Carregando animação...');

@@ -9,18 +9,19 @@ function [pos, vel, mass] = gen_initial_conditions(n, r, m, G)
   mass = zeros(1, n);
 
   % massas
-  mass = rand(1, n) * (m/3) + (m*0.0005);
+  mass = rand(1, n) * (m/10) + (m*0.0005);
   mass(1) = m;
 
   % posições
   radii = rand(1, n-1) * r + r * 0.5;
   angles = rand(1, n-1) * 2 * pi;
-  z_rot = (rand(1, n-1) - 0.5) * (2 * deg2rad(15)); %gera inclinações de até 15o na coordenada z
+  % gera inclinações de até 15o na coordenada z
+  z_rot_rad = (rand(1, n-1) - 0.5) * (2 * deg2rad(15));
 
 
   pos(1, 2:n) = radii .* cos(angles);
-  pos(2, 2:n) = radii .* sin(angles);
-  pos(3, 2:n) = radii .* sin(z_rot);
+  pos(2, 2:n) = radii .* sin(angles) .* cos(z_rot_rad);
+  pos(3, 2:n) = radii .* sin(angles) .* sin(z_rot_rad);
 
   for i = 2:n
       r_vec = pos(:,i);
