@@ -1,4 +1,17 @@
-function animate_generic(filename, m_vet)
+function animate_generic(filename)
+
+  if nargin < 2
+      meta_file = [filename, '_meta.mat'];
+
+      if exist(meta_file, 'file')
+          disp('Carregando massas do arquivo de metadados...');
+          loaded_data = load(meta_file);
+          m_vet = loaded_data.mass;
+      else
+          error(['Erro: Massa não fornecida e arquivo de metadados não encontrado: ', meta_file]);
+      end
+  end
+
   % número de corpos
   n = length(m_vet);
 
@@ -39,9 +52,9 @@ function animate_generic(filename, m_vet)
   xlabel('X (UA)');
   ylabel('Y (UA)');
   zlabel('Z (UA)');
-  title('Simulação Planetária 3D (N-Corpos)');
+  title('Simulação Planetária 3D');
 
-  % === Escala de tamanho baseada na massa ===
+  % Escala de tamanho baseada na massa
   min_size = 5;
   max_size = 20;
   min_mass = min(m_vet);
@@ -78,7 +91,7 @@ function animate_generic(filename, m_vet)
   end
 
   % configura o ângulo da câmera
-  view(45, 25);
+  view(45, 30);
 
   % loop de animação
   for k = 1:n_frames
