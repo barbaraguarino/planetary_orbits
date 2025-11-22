@@ -1,59 +1,101 @@
-function [pos, vel, mass, radius, color, n, G] = initial_conditions_solar_system()
-  % Unidade de distancia: AU
-  % Unidade de tempo: Anos
-  % Unidade de massa: Massa Solar
+function [sys] = initial_conditions_solar_system()
 
-  n = 10;
-  pos = zeros(3, n);
-  vel = zeros(3, n);
-  mass = zeros(1, n);
+    % Distância : Unidade Astronômicas
+    % Tempo     : Anos Terrestres
+    % Massa     : Massa Solar
 
-  G = 4 * pi^2;
+    %% --- Configuração e Constantes ---
 
-  % [Sol, Mercúrio, Vênus, Terra, Marte, Jupiter, Saturno, Urano, Netuno, Plutão]
-  mass = [1.0, 1.6601e-7, 2.4478e-6, 3.0035e-6, 3.2272e-7, 9.5458e-4, 2.8581e-4, 4.3641e-5, 5.1497e-5, 6.556e-9];
+    % Constante gravitacional ajustada
+    sys.G = 4 * pi^2;
 
-  pos(:,1) = [0;0;0]; % Sol no centro (inicialmente)
+    % Nome, Massa, Raio Orbital (AU), Inclinacao , Cor, Tamanho Visual
+    planet_data = {
+        'Sol',      1.0,         0,         0.00,  'y',           250;
+        'Mercúrio', 1.6601e-7,   0.387098,  7.00,  [0.5 0.5 0.5], 15;
+        'Vênus',    2.4478e-6,   0.723332,  3.39,  [0.8 0.6 0.2], 25;
+        'Terra',    3.0035e-6,   1.000000,  0.00,  'b',           25;
+        'Marte',    3.2272e-7,   1.523679,  1.85,  'r',           15;
+        'Júpiter',  9.5458e-4,   5.204267,  1.30,  [0.8 0.5 0.2], 100;
+        'Saturno',  2.8581e-4,   19.191263, 2.49,  [0.9 0.8 0.6], 80;
+        'Urano',    4.3641e-5,   30.068963, 0.77,  'c',           40;
+        'Netuno',   5.1497e-5,   39.482000, 1.77,  'b',           40;
+        'Plutão',   6.556e-9,    49.305032, 17.16, [0.6 0.4 0.4], 10;
+    };
 
-  radii = [0.387098, 0.723332, 1.000000, 1.523679, 5.204267, 9.582017, 19.191263, 30.068963, 39.482000];
-  z_rot = [7.00, 3.39, 0.00, 1.85, 1.30, 2.49, 0.77, 1.77, 17.16];
-  z_rot_rad = deg2rad(z_rot);
+    % Extração dos dados para vetores
+    names  = planet_data(:, 1)';
+    mass   = [planet_data{:, 2}];
+    radii  = [planet_data{:, 3}];
+    incl   = [planet_data{:, 4}];
+    colors = planet_data(:, 5)';
+    sizes  = [planet_data{:, 6}];
 
-  angles = rand(1, n-1) * 2 * pi;
+    n = length(mass);
 
-  pos(1, 2:n) = radii .* cos(angles);
-  pos(2, 2:n) = radii .* sin(angles) .* cos(z_rot_rad);
-  pos(3, 2:n) = radii .* sin(angles) .* sin(z_rot_rad);
+    %% --- Inicialização dos Vetores de Estado ---
 
-  % Cálculo da Velocidade
-  planet_pos = pos(:, 2:n);
-  r = vecnorm(planet_pos);
-  v_mag = sqrt(G * mass(1) ./ r);
-  n_vec = [sin(z_rot_rad); zeros(1, n-1); cos(z_rot_rad)];
-  v_vec = cross(n_vec, planet_pos, 1);
-  v_vec_normalized = v_vec ./ vecnorm(v_vec);
-  vel(:, 2:n) = v_vec_normalized .* v_mag;
+    pos = zeros(3, n);
+    vel = zeros(3, n);
 
-  % Ajuste do baricentro
-  % O Sol não fica parado; ele se move constantemente.
+    % Ângulos aleatórios para posição inicial na órbita.
+    theta = rand(1, n) * 2 * pi;
+    theta(1) = 0; % O Sol começar com ângulo 0.
 
-  % Calcula o momento total dos planetas (P = m*v)
-  % m_planets [1, n-1], v_planets [3, n-1]
-  m_planets_broadcast = mass(2:n);
-  v_planets = vel(:, 2:n);
+    %% --- Cálculo de Órbitas ---
 
-  % Broadcasting multiplica m(1,j) por v(i,j)
-  momentum_planets = v_planets .* m_planets_broadcast;
-  total_momentum_planets = sum(momentum_planets, 2);
+    %% Criar planeta no plano 2D
+    x_2d = radii .* cos(theta);
+    y_2d = radii .* sin(theta);
+    z_2d = zeros(1, n);
 
-  % Defini a velocidade do Sol para que o momento total seja zero
-  % P_sol = -P_planetas
-  % v_sol = -P_planetas / m_sol
-  vel(:, 1) = -total_momentum_planets / mass(1);
+    pos_temp = [x_2d; y_2d; z_2d];
 
-  % Dados visuais
-  radius = zeros(1, n);
-  radius(1) = 0.25;
-  radius(2:n) = 0.25;
-  color = ['y','k','m','b','r','c','g','c','b','m'];
+    % Calcular Velocidade Orbital Circular
+    v_mag = zeros(1, n);
+    v_mag(2:end) = sqrt(sys.G * mass(1) ./ radii(2:end));
+
+    % A velocidade é tangente à posição.
+    vx_2d = -v_mag .* sin(theta);
+    vy_2d =  v_mag .* cos(theta);
+    vz_2d = zeros(1, n);
+
+    vel_temp = [vx_2d; vy_2d; vz_2d];
+
+    % --- Aplicação da Inclinação Orbital (3D) ---
+
+    % Rotacionar tanto a posição, quanto a velocidade para incluir a inclinação
+    for i = 2:n
+        angle_rad = deg2rad(incl(i));
+
+        % Matriz de Rotação em torno do eixo X
+        Rx = [1, 0, 0;
+              0, cos(angle_rad), -sin(angle_rad);
+              0, sin(angle_rad),  cos(angle_rad)];
+
+        % Aplica a rotação
+        pos(:, i) = Rx * pos_temp(:, i);
+        vel(:, i) = Rx * vel_temp(:, i);
+    end
+
+    % --- Ajuste do Baricentro (Conservação do Momento) ---
+    % Se a soma dos momentos (m*v) não for zero, o sistema todo
+    % começa a "andar" pelo espaço. Para evitar isso, o Sol deve se
+    % mover na direção oposta à soma dos planetas.
+
+    % Soma o momento linear de todos os planetas.
+    momentum_total = sum(mass .* vel, 2);
+
+    % Define a velocidade do Sol para anular esse momento total.
+    vel(:, 1) = -momentum_total / mass(1);
+
+    %% --- Dados de Saída ---
+
+    sys.pos = pos;       % Posições iniciais
+    sys.vel = vel;       % Velocidades inicias
+    sys.mass = mass;     % Massas (Massas Solares)
+    sys.color = colors;  % Cores para plotagem
+    sys.name = names;    % Nomes dos copros
+    sys.size = sizes;    % Tamanho visual relativo para plotagem
+
 end
