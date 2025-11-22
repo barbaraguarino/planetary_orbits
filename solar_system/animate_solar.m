@@ -1,4 +1,12 @@
-function animate_solar(filename, n, planet_names, c_vet, sizes)
+function animate_solar(filename, n, planet_names, c_vet, sizes, show_zones, show_trails)
+
+  if nargin < 6
+      show_zones = true;
+  end
+
+  if nargin < 7
+      show_trails = true;
+  end
 
   % Leitura do arquivo binário
   full_path = [filename, '.bin'];
@@ -40,20 +48,24 @@ function animate_solar(filename, n, planet_names, c_vet, sizes)
 
   % --- Configuração das Zonas ---
 
-  % As zonas são desenhadas relativas à posição inicial do Sol
+  zone_handles = [];
+  zones_config = [];
+  theta = [];
 
-  % Definição das zonas
-  zones_config = struct(...
-      'hot',  [0.0, 0.8, 1, 0, 0, 0.4], ...
-      'hab',  [0.8, 1.8, 0, 1, 0, 0.4], ...
-      'cold', [1.8, 40.0, 0, 1, 1, 0.3] ...
-  );
+  if show_zones
+      % As zonas são desenhadas relativas à posição inicial do Sol
+      zones_config = struct(...
+          'hot',  [0.0, 0.8, 1, 0, 0, 0.4], ...
+          'hab',  [0.8, 1.8, 0, 1, 0, 0.4], ...
+          'cold', [1.8, 40.0, 0, 1, 1, 0.3] ...
+      );
 
-  n_theta = 50;
-  theta = linspace(0, 2*pi, n_theta);
-  sun_pos_init = pos_data(:, 1, 1);
+      n_theta = 50;
+      theta = linspace(0, 2*pi, n_theta);
+      sun_pos_init = pos_data(:, 1, 1);
 
-  zone_handles = draw_zones(zones_config, theta, sun_pos_init);
+      zone_handles = draw_zones(zones_config, theta, sun_pos_init);
+  end
 
   % --- Inicialização dos Objetos Gráficos ---
 
@@ -90,8 +102,10 @@ function animate_solar(filename, n, planet_names, c_vet, sizes)
                  'PickableParts', 'none');
 
       % Cria o rastro
-      trails{i} = plot3(NaN, NaN, NaN, '-', 'Color', color_val, 'LineWidth', 1.0, ...
-                        'HitTest', 'off', 'PickableParts', 'none');
+      if show_trails
+          trails{i} = plot3(NaN, NaN, NaN, '-', 'Color', color_val, 'LineWidth', 1.0, ...
+                            'HitTest', 'off', 'PickableParts', 'none');
+      end
   end
 
   % Ângulo inicial
@@ -110,7 +124,9 @@ function animate_solar(filename, n, planet_names, c_vet, sizes)
           sun_pos = pos_data(:, 1, k);
 
           % Atualiza posição das zonas
-          update_zones(zone_handles, zones_config, theta, sun_pos);
+          if show_zones
+              update_zones(zone_handles, zones_config, theta, sun_pos);
+          end
 
           % Atualiza planetas
           for i = 1:n
@@ -124,13 +140,15 @@ function animate_solar(filename, n, planet_names, c_vet, sizes)
               set(labels{i}, 'Position', new_txt_pos);
 
               % Atualiza rastro
-              start_idx = max(1, k - trail_length);
-              idx_range = start_idx:3:k;
-              if isempty(idx_range), idx_range = k; end
+              if show_trails
+                  start_idx = max(1, k - trail_length);
+                  idx_range = start_idx:3:k;
+                  if isempty(idx_range), idx_range = k; end
 
-              set(trails{i}, 'XData', squeeze(pos_data(1,i,idx_range)), ...
-                             'YData', squeeze(pos_data(2,i,idx_range)), ...
-                             'ZData', squeeze(pos_data(3,i,idx_range)));
+                  set(trails{i}, 'XData', squeeze(pos_data(1,i,idx_range)), ...
+                                 'YData', squeeze(pos_data(2,i,idx_range)), ...
+                                 'ZData', squeeze(pos_data(3,i,idx_range)));
+              end
           end
 
           drawnow;
