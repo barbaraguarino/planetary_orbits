@@ -18,14 +18,13 @@ function [] = run_generic()
 
   [pos, vel, mass] = initial_conditions_generic_system(n_bodies, radius_sys, mass_sys, G);
 
-  step_size = 0.00001;
-  n_steps = 5000000;
-
-  steps_between_save = 1000;
+  n_steps = 5000000;         % Número total de passos
+  step_size = 0.00001;       % Tamanho de passo de tempo
+  steps_between_save = 1000; % A cada quantos passos os dados devem ser salvos
 
   disp(['Iniciando simulação e salvando em: ' filename]);
 
-  simulate_planetary_orbits(pos, vel, mass, n_steps, step_size, steps_between_save, G, filename);
+  simulate_planetary_orbits(pos, vel, mass, G, n_steps, step_size, steps_between_save, filename);
 
   disp('Carregando animação...');
   animate_generic(filename, mass);
