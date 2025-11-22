@@ -1,4 +1,4 @@
-function gerar_cenarios()
+function gen_scenarios()
     clc;
 
     if exist('common', 'dir'), addpath('common'); end
