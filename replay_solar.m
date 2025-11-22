@@ -54,7 +54,7 @@ function replay_solar(filename)
 
     try
         disp('Iniciando player...');
-        animate_solar(final_path, length(sys.mass), sys.name, sys.color, sys.size);
+        animate_solar(final_path, length(sys.name), sys.name, sys.color, sys.size, false, false);
 
     catch ME
         disp('--- [ERRO] Falha ao reproduzir a animação ---');
