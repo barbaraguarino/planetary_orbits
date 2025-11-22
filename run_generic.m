@@ -20,7 +20,7 @@ function [] = run_generic()
 
   n_steps = 5000000;         % Número total de passos
   step_size = 0.00001;       % Tamanho de passo de tempo
-  steps_between_save = 1000; % A cada quantos passos os dados devem ser salvos
+  steps_between_save = 100; % A cada quantos passos os dados devem ser salvos
 
   disp(['Iniciando simulação e salvando em: ' filename]);
 
