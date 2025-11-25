@@ -11,7 +11,7 @@ function gen_scenarios()
 
     % CENÁRIO 1: Solar HD (Referência)
 
-    disp('[1/4] Gerando: solar_hd (Simulando 25 anos)...');
+    disp('[1/5] Gerando: solar_hd (Simulando 25 anos)...');
     [sys] = initial_conditions_solar_system();
 
     step_size = 0.0002;
@@ -23,7 +23,7 @@ function gen_scenarios()
 
     % CENÁRIO 2: Super Júpiter (O Destruidor de Mundos)
 
-    disp('[2/4] Gerando: super_jupiter (Simulando 50 anos de caos)...');
+    disp('[2/5] Gerando: super_jupiter (Simulando 50 anos de caos)...');
     [sys] = initial_conditions_solar_system();
 
     sys.mass(6) = sys.mass(6) * 1000; % Júpiter vira uma estrela gêmea
@@ -37,7 +37,7 @@ function gen_scenarios()
 
     % CENÁRIO 3: A Estrela de Nêutrons (Órbitas Espirais)
 
-    disp('[3/4] Gerando: estrela_neutrons (Caos Controlado)...');
+    disp('[3/5] Gerando: estrela_neutrons (Caos Controlado)...');
 
     [sys] = initial_conditions_solar_system();
 
@@ -56,23 +56,39 @@ function gen_scenarios()
     % CENÁRIO 4: Plutão Kamikaze (O Tiro ao Alvo)
     % Fazer Plutão atravessar o sistema solar "cortando" as órbitas
 
-    disp('[4/4] Gerando: plutao_kamikaze (Mergulho suicida)...');
+    disp('[4/5] Gerando: plutao_kamikaze (Mergulho suicida)...');
     [sys] = initial_conditions_solar_system();
 
     % Zera a velocidade orbital natural
     sys.vel(:, 10) = [0; 0; 0];
 
-    % Defini uma velocidade BALÍSTICA direta para o Sol (origem 0,0,0)
-    % Plutão começa em X ~ 49. Da uma velocidade negativa forte em X.
-    % Vel = -2.0 AU/ano (muito rápido para um planeta)
-    sys.vel(:, 10) = [-2.5; 0.5; 2.0];
+    dir = -sys.pos(:, 10)/norm(sys.pos(:, 10));
+
+    sys.vel(:, 10) = 2*dir;
 
     step_size = 0.002;
     n_steps = 25000; % 50 anos de viagem
     save_interval = 10;
 
-    filename = fullfile(output_dir, 'plutao_kamikaze');
+     filename = fullfile(output_dir, 'plutao_kamikaze');
     simulate_planetary_orbits(sys.pos, sys.vel, sys.mass, sys.G, n_steps, step_size, save_interval, filename);
+
+     % CENÁRIO 5: Deriva Galática
+     % Fazer o Sistema Solar se mover
+
+    disp('[5/5] Gerando: solar_moving_sun (Sistema Solar se movendo)...');
+    [sys] = initial_conditions_solar_system();
+
+    sys.vel(1,:) = sys.vel(1,:) + 48.6/6;
+
+    step_size = 0.002;
+    n_steps = 25000; % 50 anos de viagem
+    save_interval = 10;
+
+     filename = fullfile(output_dir, 'solar_moving_sun');
+    simulate_planetary_orbits(sys.pos, sys.vel, sys.mass, sys.G, n_steps, step_size, save_interval, filename);
+
+
 
     disp('Cenários gerados!');
 end
