@@ -102,4 +102,3 @@ O método **Leapfrog** ("pula-cela") é utilizado por ser *simplético*, ou seja
 - Pedro Sineiro
 - Barbara Nascimento
 - Pedro Muniz
-- Ellen
