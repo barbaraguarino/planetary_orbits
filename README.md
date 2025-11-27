@@ -16,6 +16,5 @@ O código base está funcional (simulação de órbitas). Atualmente estou traba
 - [ ] Refatoração para otimizar o cálculo vetorial
 - [ ] Melhorias na visualização gráfica
 
----
----
+
 *Nota: Este projeto teve início como um trabalho em grupo. A versão original entregue à disciplina pode ser [consultada nesta branch de backup](https://github.com/barbaraguarino/planetary_orbits/tree/projeto-original)*
