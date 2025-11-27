@@ -10,7 +10,7 @@ O código base está funcional (simulação de órbitas). Atualmente estou traba
 ## Tecnologias
 - Octave
 
-## Próximos Passos (Roadmap)
+## Próximos Passos
 - [x] Simulação básica de órbitas (Concluído na disciplina)
 - [ ] Implementação de detecção de colisões entre corpos celestes
 - [ ] Refatoração para otimizar o cálculo vetorial
