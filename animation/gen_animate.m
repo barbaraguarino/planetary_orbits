@@ -52,12 +52,12 @@ function gen_animate(filename, n, planet_names, c_vet, sizes, show_zones, show_t
   % --- Configuração das Zonas ---
   if show_zones
       zones_config = struct(...
-          'hot',  [0.0, 0.8, 1, 0, 0, 0.2], ...
-          'hab',  [0.8, 1.8, 0, 1, 0, 0.2], ...
-          'cold', [1.8, 45.0, 0, 1, 1, 0.1] ...
+          'hot',  [0.0, 0.8, 1, 0, 0, 0.4], ...
+          'hab',  [0.8, 1.8, 0, 1, 0, 0.4], ...
+          'cold', [1.8, 40.0, 0, 1, 1, 0.3] ...
       );
 
-      n_theta = 100; % Aumentei um pouco para ficar mais redondo
+      n_theta = 100;
       theta = linspace(0, 2*pi, n_theta);
       sun_pos_init = pos_data(:, 1, 1);
 
@@ -69,7 +69,7 @@ function gen_animate(filename, n, planet_names, c_vet, sizes, show_zones, show_t
   trails = cell(1, n);
   trail_length = 200;
 
-  text_offset = max_coord * 0.02; % Ajuste do offset para escala visual
+  text_offset = max_coord * 0.001;
 
   for i = 1:n
 

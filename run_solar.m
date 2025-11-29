@@ -17,8 +17,8 @@ function [] = run_solar()
   [sys] = gen_conditions();
 
   n_steps = 500000;
-  step_size = 0.0001;
-  steps_between_save = 100;
+  step_size = 0.00001;
+  steps_between_save = 20;
 
   disp(['Iniciando simulação e salvando em: ' filename]);
 
