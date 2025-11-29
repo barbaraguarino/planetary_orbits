@@ -1,39 +1,44 @@
 function simulate_planetary_orbits(pos_vet, vel_vet, m_vet, G, n_steps, step_size, steps_between_save, filename)
 
   tic;
+  starttime = time();
+
   n = length(m_vet);
 
-  % Matriz de Massas para Força: G * mi * mj
   M_matrix = G * (m_vet' * m_vet);
 
   fid = fopen([filename, '.bin'], 'wb');
-  if fid == -1, error('Erro ao criar arquivo.'); end
 
-  % Aceleração Inicial
-  a_vet = calculate_acceleration_2d(pos_vet, m_vet, M_matrix, n);
+  if fid == -1
+        error('Erro: Não foi possível criar o arquivo de saída.');
+  end
 
-  % Leapfrog: Avança V para t = 0.5*dt
+  a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n);
   vel_vet = vel_vet + a_vet * (step_size / 2.0);
 
-  fprintf('Simulação 2D em progresso...\n');
+  fprintf('Simulação em progresso:  0.00%% concluído.\r');
 
-  for t = 1:n_steps
-    % 1. Posição (Drift)
+  for _t = 1:n_steps
     pos_vet = pos_vet + vel_vet * step_size;
-
-    % 2. Aceleração (Kick)
-    a_vet = calculate_acceleration_2d(pos_vet, m_vet, M_matrix, n);
-
-    % 3. Velocidade (Drift)
+    a_vet = calculate_acceleration(pos_vet, m_vet, M_matrix, n);
     vel_vet = vel_vet + a_vet * step_size;
 
-    % Salvar
-    if mod(t, steps_between_save) == 0
+    if mod(_t, steps_between_save) == 0
       fwrite(fid, pos_vet, 'double');
+      percent_done = (_t / n_steps) * 100;
+      fprintf('Simulação em progresso: %.2f%% concluído.\r', percent_done);
     end
   end
 
+  clc;
+  fprintf('Simulação em progresso: 100.00%% concluído.\n');
+
+  endtime = time();
+  duration = endtime - starttime;
+
   toc;
+
   fclose(fid);
-  disp('Dados salvos.');
+
+  disp('Simulação finalizada. Dados salvos.');
 end

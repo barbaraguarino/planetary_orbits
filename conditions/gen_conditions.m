@@ -2,7 +2,7 @@ function [sys] = gen_conditions()
 
     % --- Configuração e Constantes ---
 
-    % Constante gravitacional ajustada (para Unidades Astronômicas e Anos)
+    % G = 4 * pi^2 assume massa em M_sol, distância em AU e tempo em Anos.
     sys.G = 4 * pi^2;
 
     % Nome, Massa (M_sol), Raio Orbital (AU), Cor, Tamanho Visual
@@ -28,42 +28,44 @@ function [sys] = gen_conditions()
 
     n = length(mass);
 
-    %% --- Inicialização dos Vetores de Estado (2D) ---
-    % Matrizes 2xN (Linha 1: X, Linha 2: Y)
-    pos = zeros(2, n);
-    vel = zeros(2, n);
+    %% --- Inicialização e Cálculos ---
 
     % Ângulos aleatórios para posição inicial na órbita
     theta = rand(1, n) * 2 * pi;
     theta(1) = 0; % Sol no ângulo 0
 
-    %% --- Cálculo de Órbitas ---
+    % 1. Posição: Conversão Polar para Cartesiana
+    x = radii .* cos(theta);
+    y = radii .* sin(theta);
 
-    % Posição: Conversão Polar para Cartesiana
-    pos(1, :) = radii .* cos(theta); % X
-    pos(2, :) = radii .* sin(theta); % Y
+    pos = [x; y];
 
-    % Velocidade Orbital Circular
+    % 2. Velocidade Orbital Circular
     % v = sqrt(GM / r)
     v_mag = zeros(1, n);
 
-    % Evita divisão por zero para o Sol (raio 0)
-    if radii(1) == 0
-       v_mag(2:end) = sqrt(sys.G * mass(1) ./ radii(2:end));
-    else
-       v_mag = sqrt(sys.G * mass(1) ./ radii);
-    end
+    % Evita divisão por zero para o Sol (radii(1) é 0)
+    v_mag(2:end) = sqrt(sys.G * mass(1) ./ radii(2:end));
 
-    % Velocidade tangente à trajetória (perpendicular ao raio)
-    vel(1, :) = -v_mag .* sin(theta); % Vx
-    vel(2, :) =  v_mag .* cos(theta); % Vy
+    % A velocidade é tangente à posição (rotacionada 90 graus)
+    vx = -v_mag .* sin(theta);
+    vy =  v_mag .* cos(theta);
 
-    %% --- Ajuste do Baricentro ---
-    % Garante que o momento linear total do sistema seja zero para que o sistema
-    % não "vagueie" pelo espaço.
+    vel = [vx; vy];
 
-    momentum_total = sum(mass .* vel, 2); % Soma vetorial das linhas
+    %% --- Ajuste do Baricentro (Drift Correction) ---
+
+    % 1. Correção de Velocidade (Momento Linear)
+    % Garante que o Sol tenha um pequeno "recuo" oposto aos planetas
+    % para que o sistema todo não saia andando (drift).
+    momentum_total = sum(mass .* vel, 2);
     vel(:, 1) = -momentum_total / mass(1);
+
+    % 2. Correção de Posição (Centro de Massa)
+    % Garante que o centro de massa do sistema esteja exatamente em (0,0)
+    % Isso evita que o Sol oscile muito longe da origem do gráfico.
+    center_of_mass = sum(mass .* pos, 2) / sum(mass);
+    pos = pos - center_of_mass;
 
     %% --- Dados de Saída ---
     sys.pos = pos;
