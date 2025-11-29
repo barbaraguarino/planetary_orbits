@@ -1,30 +1,30 @@
 function [] = run_solar()
-  clc; clear all;
+  clc; clear; close all;
 
+  % Adiciona pastas ao path
   addpath('conditions');
   addpath('calculation');
   addpath('animation');
 
-  if ~exist('data', 'dir')
-      mkdir('data');
-  end
+  % Cria pasta de dados se não existir
+  if ~exist('data', 'dir'), mkdir('data'); end
 
-  filename = fullfile('data', 'simulacao_solar');
+  filename = fullfile('data', 'simulacao_solar_2d');
 
-  disp('Simulação do Sistema Solar');
-  disp('Gerando condições iniciais...');
+  disp('=== Simulação do Sistema Solar 2D ===');
 
-  [sys] = gen_conditions();
+  % 1. Gerar Condições
+  sys = gen_conditions();
 
-  n_steps = 500000;         % Número total de passos
-  step_size = 0.0001;       % Tamanho de passo de tempo
-  steps_between_save = 100;  % A cada quantos passos os dados devem ser salvos
+  % 2. Configurar Simulação
+  n_steps = 100000;
+  step_size = 0.0005;
+  save_interval = 50;
 
-  disp(['Iniciando simulação e salvando em: ' filename]);
+  % 3. Rodar Física
+  simulate_planetary_orbits(sys.pos, sys.vel, sys.mass, sys.G, ...
+                            n_steps, step_size, save_interval, filename);
 
-  simulate_planetary_orbits(sys.pos, sys.vel, sys.mass, sys.G, n_steps, step_size, steps_between_save, filename);
-
-  disp('Carregando animação...');
+  % 4. Animar
   gen_animate(filename, length(sys.mass), sys.name, sys.color, sys.size);
-
 end

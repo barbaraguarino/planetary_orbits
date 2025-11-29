@@ -1,200 +1,119 @@
 function gen_animate(filename, n, planet_names, c_vet, sizes, show_zones, show_trails)
 
-  if nargin < 6
-      show_zones = true;
-  end
+  if nargin < 6, show_zones = true; end
+  if nargin < 7, show_trails = true; end
 
-  if nargin < 7
-      show_trails = true;
-  end
-
-  % Leitura do arquivo binário
+  % --- Leitura dos Dados 2D ---
   full_path = [filename, '.bin'];
   fid = fopen(full_path, 'rb');
-  if fid == -1
-      error(['Erro ao abrir arquivo: ', full_path]);
-      return;
-  end
+  if fid == -1, error('Erro ao abrir arquivo binário.'); end
+
   data = fread(fid, 'double');
   fclose(fid);
 
-  n_values_per_frame = 3 * n;
+  % Importante: Agora são 2 coordenadas (x,y) por corpo
+  n_values_per_frame = 2 * n;
   n_frames = floor(length(data) / n_values_per_frame);
 
-  if n_frames == 0
-      warning('Arquivo de dados vazio ou corrompido.');
-      return;
-  end
+  if n_frames == 0, warning('Sem dados.'); return; end
 
-  pos_data = reshape(data(1:(n_frames * n_values_per_frame)), [3, n, n_frames]);
+  % Reshape para [2, N, Frames]
+  pos_data = reshape(data(1:(n_frames * n_values_per_frame)), [2, n, n_frames]);
 
   % --- Configuração da Figura ---
+  h_fig = figure('Name', 'Simulação Solar 2D', 'Color', 'w');
 
-  h_fig = figure('Name', 'Simulação Sistema Solar', 'NumberTitle', 'off');
+  max_coord = 35; % Ajuste conforme necessário (Plutão ~39 AU)
 
-  % Definição dos limites do gráfico
-  max_coord = 35;
-
-  hold on;
-  grid on;
-  axis equal;
+  hold on; grid on; axis equal;
   xlim([-max_coord, max_coord]);
   ylim([-max_coord, max_coord]);
-  zlim([-max_coord, max_coord]);
-  xlabel('X (AU)');
-  ylabel('Y (AU)');
-  zlabel('Z (AU)');
-  title('Simulação do Sistema Solar');
+  xlabel('X (AU)'); ylabel('Y (AU)');
+  title('Sistema Solar 2D');
+  set(gca, 'Color', [0.05 0.05 0.1]); % Fundo escuro para contraste
 
-  % --- Configuração das Zonas ---
-
+  % --- Zonas (Círculos) ---
   zone_handles = [];
-  zones_config = [];
-  theta = [];
-
   if show_zones
-      % As zonas são desenhadas relativas à posição inicial do Sol
-      zones_config = struct(...
-          'hot',  [0.0, 0.8, 1, 0, 0, 0.4], ...
-          'hab',  [0.8, 1.8, 0, 1, 0, 0.4], ...
-          'cold', [1.8, 40.0, 0, 1, 1, 0.3] ...
-      );
+     % Desenha círculos preenchidos
+     theta = linspace(0, 2*pi, 100);
+     % Zonas: raio_min, raio_max, r, g, b, alpha
+     zones = [0.0, 0.8,  1, 0, 0, 0.2;   % Hot
+              0.8, 1.8,  0, 1, 0, 0.2;   % Habitable
+              1.8, 40.0, 0, 1, 1, 0.1];  % Cold
 
-      n_theta = 50;
-      theta = linspace(0, 2*pi, n_theta);
-      sun_pos_init = pos_data(:, 1, 1);
+     for z = 1:size(zones, 1)
+         r_inner = zones(z, 1);
+         r_outer = zones(z, 2);
+         color = zones(z, 3:5);
+         alpha = zones(z, 6);
 
-      zone_handles = draw_zones(zones_config, theta, sun_pos_init);
+         % Cria anel usando fill
+         x_ring = [r_inner*cos(theta), fliplr(r_outer*cos(theta))];
+         y_ring = [r_inner*sin(theta), fliplr(r_outer*sin(theta))];
+
+         zone_handles(z) = fill(x_ring, y_ring, color, ...
+             'FaceAlpha', alpha, 'EdgeColor', 'none');
+     end
   end
 
-  % --- Inicialização dos Objetos Gráficos ---
-
+  % --- Objetos Gráficos ---
   points = cell(1, n);
   labels = cell(1, n);
   trails = cell(1, n);
-  trail_length = 200;
-
-  % Distância do nome ao planetas
-  text_offset = max_coord * 0.001;
+  trail_len = 150;
 
   for i = 1:n
-
-      if iscell(c_vet)
-          color_val = c_vet{i};
-      else
-          color_val = c_vet(i);
+      color_val = c_vet{i};
+      if ~ischar(color_val) && length(color_val) > 3
+          color_val = color_val(1:3); % Proteção
       end
 
-      % Cria os pontos
-      points{i} = scatter3(pos_data(1,i,1), pos_data(2,i,1), pos_data(3,i,1), ...
-                           sizes(i), color_val, 'filled', ...
-                           'MarkerEdgeColor', 'k', ...
-                           'HitTest', 'off', ...
-                           'PickableParts', 'none');
-
-      % Cria os nomes
-      pos_txt = pos_data(:,i,1);
-      labels{i} = text(pos_txt(1)+text_offset, pos_txt(2)+text_offset, pos_txt(3)+text_offset, ...
-                 planet_names{i}, 'FontSize', 10, 'Color', 'k', ...
-                 'HorizontalAlignment', 'left', ...
-                 'VerticalAlignment', 'bottom', ...
-                 'HitTest', 'off', ...
-                 'PickableParts', 'none');
-
-      % Cria o rastro
+      % Rastro
       if show_trails
-          trails{i} = plot3(NaN, NaN, NaN, '-', 'Color', color_val, 'LineWidth', 1.0, ...
-                            'HitTest', 'off', 'PickableParts', 'none');
+          trails{i} = plot(NaN, NaN, '-', 'Color', color_val, 'LineWidth', 1);
       end
-  end
 
-  % Ângulo inicial
-  view(45, 30);
+      % Planeta (Scatter 2D)
+      points{i} = scatter(pos_data(1,i,1), pos_data(2,i,1), ...
+          sizes(i), color_val, 'filled', 'MarkerEdgeColor', 'w');
+
+      % Nome
+      labels{i} = text(pos_data(1,i,1), pos_data(2,i,1), ['  ' planet_names{i}], ...
+          'Color', 'w', 'FontSize', 9);
+  end
 
   % --- Loop de Animação ---
+  disp('Animando...');
+  skip = 2; % Pula frames para acelerar visualização
 
-  disp('Iniciando animação...');
+  for k = 1:skip:n_frames
+      if ~ishandle(h_fig), break; end
 
-  skip_frame = 1;
+      % O Sol é o índice 1. Se quisermos centralizar no Sol:
+      % sun_pos = pos_data(:, 1, k);
+      % Mas as zonas são fixas na origem (0,0) neste código simplificado.
 
-  while ishandle(h_fig)
-      for k = 1:skip_frame:n_frames
-          if ~ishandle(h_fig), break; end
+      for i = 1:n
+          pos = pos_data(:, i, k);
 
-          sun_pos = pos_data(:, 1, k);
+          % Atualiza Planeta
+          set(points{i}, 'XData', pos(1), 'YData', pos(2));
 
-          % Atualiza posição das zonas
-          if show_zones
-              update_zones(zone_handles, zones_config, theta, sun_pos);
+          % Atualiza Texto
+          set(labels{i}, 'Position', [pos(1), pos(2), 0]);
+
+          % Atualiza Rastro
+          if show_trails
+              idx_start = max(1, k - trail_len);
+              % Acessa histórico [2, 1, Frames] -> squeeze -> [2, Frames] -> transposta -> [Frames, 2]
+              hist = pos_data(:, i, idx_start:skip:k);
+              set(trails{i}, 'XData', hist(1,:), 'YData', hist(2,:));
           end
-
-          % Atualiza planetas
-          for i = 1:n
-              pos = pos_data(:, i, k);
-
-              % Atualiza ponto
-              set(points{i}, 'XData', pos(1), 'YData', pos(2), 'ZData', pos(3));
-
-              % Atualiza texto
-              new_txt_pos = [pos(1)+text_offset, pos(2)+text_offset, pos(3)+text_offset];
-              set(labels{i}, 'Position', new_txt_pos);
-
-              % Atualiza rastro
-              if show_trails
-                  start_idx = max(1, k - trail_length);
-                  idx_range = start_idx:3:k;
-                  if isempty(idx_range), idx_range = k; end
-
-                  set(trails{i}, 'XData', squeeze(pos_data(1,i,idx_range)), ...
-                                 'YData', squeeze(pos_data(2,i,idx_range)), ...
-                                 'ZData', squeeze(pos_data(3,i,idx_range)));
-              end
-          end
-
-          drawnow;
-
-          pause(0.02);
       end
 
-      break
-
+      drawnow limitrate;
+      pause(0.01);
   end
-
-  if ishandle(h_fig), close(h_fig); end
-  disp('Animação finalizada.');
-end
-
-% --- Funções Auxiliares ---
-
-% Função para desenhar as zonas
-function handles = draw_zones(zones, theta, center)
-    handles = struct();
-    fn = fieldnames(zones);
-    for i = 1:numel(fn)
-        z = zones.(fn{i});
-        [R, T] = meshgrid([z(1), z(2)], theta);
-        X = R .* cos(T) + center(1);
-        Y = R .* sin(T) + center(2);
-        Z = zeros(size(X)) + center(3);
-
-        handles.(fn{i}) = surf(X, Y, Z, ...
-            'FaceColor', [z(3) z(4) z(5)], ...
-            'FaceAlpha', z(6), ...
-            'EdgeColor', 'none', ...
-            'HitTest', 'off', ...
-            'PickableParts', 'none');
-    end
-end
-
-% Funação para atualizar as zonas
-function update_zones(handles, zones, theta, center)
-    fn = fieldnames(zones);
-    for i = 1:numel(fn)
-        z = zones.(fn{i});
-        [R, T] = meshgrid([z(1), z(2)], theta);
-        set(handles.(fn{i}), ...
-            'XData', R .* cos(T) + center(1), ...
-            'YData', R .* sin(T) + center(2), ...
-            'ZData', zeros(size(R)) + center(3));
-    end
+  disp('Fim.');
 end
