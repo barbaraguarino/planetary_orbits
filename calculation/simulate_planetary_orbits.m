@@ -11,10 +11,9 @@ function simulate_planetary_orbits(pos_vet, vel_vet, m_vet, G, n_steps, step_siz
   M_matrix = G * (m_vet' * m_vet);
 
   fid = fopen([filename, '.bin'], 'wb');
-  flog = fopen([filename, '.log'], 'w');
 
-  if fid == -1 || fid == -1
-        error('Erro: Não foi possível criar os arquivos de saída.');
+  if fid == -1
+        error('Erro: Não foi possível criar o arquivo de saída.');
   end
 
   % --- Integrador Leapfrog ---
@@ -62,23 +61,7 @@ function simulate_planetary_orbits(pos_vet, vel_vet, m_vet, G, n_steps, step_siz
 
   toc;
 
-  % --- Escreve no Arquivo de Log ---
-
-  fprintf(flog, ...
-    'Dados da Execução\nFilename: (%s.bin) \nExecução (s): %f\nSteps: %d\nStep Size: %f\nSteps Between Save: %d\nG: %e\nMassas: %s\nPosições (X;Y;Z): %s\nVelocidades (VX;VY;VZ): %s\n', ...
-    filename, ...
-    duration, ...
-    n_steps, ...
-    step_size, ...
-    steps_between_save, ...
-    G, ...
-    mat2str(m_vet), ...
-    mat2str(pos_vet), ...
-    mat2str(vel_vet) ...
-  );
-
   fclose(fid);
-  fclose(flog);
 
   disp('Simulação finalizada. Dados salvos.');
 end

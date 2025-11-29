@@ -1,4 +1,4 @@
-function animate_solar(filename, n, planet_names, c_vet, sizes, show_zones, show_trails)
+function gen_animate(filename, n, planet_names, c_vet, sizes, show_zones, show_trails)
 
   if nargin < 6
       show_zones = true;

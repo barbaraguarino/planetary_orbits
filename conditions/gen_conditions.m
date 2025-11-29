@@ -1,4 +1,4 @@
-function [sys] = initial_conditions_solar_system()
+function [sys] = gen_conditions()
 
     % Distância : Unidade Astronômicas
     % Tempo     : Anos Terrestres
